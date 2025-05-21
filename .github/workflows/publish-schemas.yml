@@ -1,0 +1,33 @@
+name: Publish CUE Schemas with Dagger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# allow the job to upload to ghcr.io with the GITHUB_TOKEN
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      OWNER: ${{ github.repository_owner }}
+      REPO:  ${{ github.event.repository.name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Call Dagger “publish”
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          module: github.com/orvis98/daggerverse/cue-schemas
+          call: >-
+            publish --file ./sources.yaml
+            --registry ghcr.io/$OWNER/$REPO
+            --password env:GITHUB_TOKEN
